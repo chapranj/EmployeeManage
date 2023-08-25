@@ -1,0 +1,9 @@
+.buttonNormal{
+    -fx-pref-width: 150px;
+    -fx-pref-height: 120px;
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-margin-top: 12px;
+}

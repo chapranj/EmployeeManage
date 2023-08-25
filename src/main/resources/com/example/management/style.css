@@ -1,0 +1,23 @@
+
+.head{
+    -fx-fill: blue;
+    -fx-font-size: 20px;
+}
+.submitButton{
+    -fx-background-color: red;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-margin:20px;
+    -fx-transition : all 0.4s;
+}
+.submitButton:hover{
+    -fx-background-color: white;
+    -fx-text-fill: red;
+}
+.text{
+    -fx-fill: green;
+    -fx-font-size: 16px;
+}
+
+
+
