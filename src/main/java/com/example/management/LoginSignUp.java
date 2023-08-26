@@ -22,7 +22,7 @@ import java.util.concurrent.Flow;
 public class LoginSignUp extends Application {
     public static String jdbcUrl = "jdbc:mysql://localhost:3306/employeemanage";
     public static String username = "root";
-    public static String password = "";
+    public static String passwordForDb = "";
     static FlowPane wholeContainer = new FlowPane(Orientation.VERTICAL);
     static Scene firstScene = new Scene(wholeContainer,600,600);
 
@@ -42,6 +42,10 @@ public class LoginSignUp extends Application {
     public ScrollPane scpane = new ScrollPane();
     static VBox empInfoContainer = new VBox();
     static Scene viewEmpScene = new Scene(empInfoContainer,600,600);
+
+    static FlowPane removeEmployeeContainer = new FlowPane(Orientation.VERTICAL);
+    static Scene removeEmpScene = new Scene(removeEmployeeContainer,600,600);
+
 
     static ScrollPane scrollPane = new ScrollPane();
     static VBox viewHoursContainer = new VBox();
@@ -79,6 +83,7 @@ public class LoginSignUp extends Application {
         wholeContainerForViewHours.getChildren().add(viewHoursContainer);
 
         empInfoContainer.getChildren().add(backButton);
+        empInfoContainer.setSpacing(14);
         scpane.setContent(empInfoContainer);
         scpane.setFitToHeight(true);
         scpane.setFitToWidth(true);
@@ -124,6 +129,7 @@ public class LoginSignUp extends Application {
 
 
         adminBtnContainer.getChildren().addAll(addEmp,removeEmp,viewEmp,logOut);
+        adminBtnContainer.setSpacing(15);
 
 
         GridPane gp2 = new GridPane();
@@ -151,6 +157,38 @@ public class LoginSignUp extends Application {
         gp2.add(addEmpButton,1,3);
 
         adminControlsContainer.getChildren().add(gp2);
+        Button backButton3 = new Button("Back");
+        gp2.add(backButton3,0,3);
+        backButton3.setOnAction(actionEvent -> {
+            stage.setScene(adminScene);
+        });
+
+
+        GridPane gp3 = new GridPane();
+
+        //add heading for the remove employee page
+        Text removeEmpIdText = new Text("Employee Id: ");
+        removeEmpIdText.getStyleClass().add("text");
+
+        TextField removeEmpIdTextAns = new TextField();
+
+        Button removeEmpButton = new Button("Remove Employee");
+
+        gp3.add(removeEmpIdText,0,0);
+        gp3.add(removeEmpIdTextAns,1,0);
+        gp3.add(removeEmpButton,1,1);
+
+        adminControlsContainer.getChildren().add(gp3);
+        Button backButton4 = new Button("Back");
+        gp2.add(backButton4,0,3);
+        backButton4.setOnAction(actionEvent -> {
+            stage.setScene(adminScene);
+        });
+
+        removeEmployeeContainer.getChildren().add(gp3);
+
+
+
 
         Button clockIn = new Button("Clock In");
         clockIn.getStyleClass().add("buttonNormal");
@@ -179,29 +217,38 @@ public class LoginSignUp extends Application {
         submit.getStyleClass().add("submitButton");
 
         submit.setOnAction(actionEvent -> {
-
-            if (txtIdAns.getText().equals("admin") && passAns.getText().equals("admin")){
-                stage.setScene(adminScene);
-            }
-
-            else{
-                currentEmployee.setId(txtIdAns.getText());
-                currentEmployee.setPassword(passAns.getText());
-                try{
-                    Connection connection = DriverManager.getConnection(jdbcUrl,username,password);
-                    String query = "select employeeName from employee where employeeId = ?";
-                    PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    preparedStatement.setString(1,currentEmployee.getId());
-                    ResultSet resultSet = preparedStatement.executeQuery();
-                    if (resultSet.next()){
-                        String currentEmployeeName = resultSet.getString("employeeName");
+            String id = txtIdAns.getText();
+            String password = passAns.getText();
+            try{
+                Connection connection = DriverManager.getConnection(jdbcUrl,username,passwordForDb);
+                String query = "select * from admin where adminId = ? and adminPassword = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1,id);
+                preparedStatement.setString(2,password);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                if (resultSet.next()){
+                    System.out.println("admin detected!");
+                    System.out.println("Admin Id : "+ resultSet.getString("adminId"));
+                    System.out.println("Admin Name : "+ resultSet.getString("adminName"));
+                    stage.setScene(adminScene);
+                }
+                else {
+                    String query2 = "select * from employee where employeeId = ? and employeePass = ?";
+                    PreparedStatement preparedStatement1 = connection.prepareStatement(query2);
+                    preparedStatement1.setString(1,id);
+                    preparedStatement1.setString(2,password);
+                    ResultSet resultSet1 = preparedStatement1.executeQuery();
+                    if (resultSet1.next()){
+                        String currentEmployeeName = resultSet1.getString("employeeName");
                         currentEmployee.setName(currentEmployeeName);
+                        currentEmployee.setId(id);
+                        currentEmployee.setPassword(password);
+                        EmployeeManager.empManage(id,password,stage);
                     }
 
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
-                EmployeeManager.empManage(txtIdAns.getText(), passAns.getText(), stage);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
 
         });
@@ -224,6 +271,15 @@ public class LoginSignUp extends Application {
             else{
                 System.out.println("Enter something!");
             }
+        });
+
+        removeEmp.setOnAction(actionEvent -> {
+            stage.setScene(removeEmpScene);
+        });
+
+        removeEmpButton.setOnAction(actionEvent -> {
+            EmployeeManager.removeEmpMethod(stage,removeEmpIdTextAns.getText());
+            stage.setScene(adminScene);
         });
 
         viewEmp.setOnAction(actionEvent -> {

@@ -6,6 +6,7 @@ import javafx.stage.Stage;
 
 import javax.security.auth.PrivateCredentialPermission;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -66,15 +67,44 @@ public class EmployeeManager {
                 Timestamp clockInTime = resultSet.getTimestamp("clock_in");
                 Timestamp clockOutTime = resultSet.getTimestamp("clock_out");
                 double hours = resultSet.getDouble("hours_worked");
-                Text txtInfo =
-                        new Text("Employee Id: "+empId+" || Employee Name:  "+ employeeName+" || Date: "+ workDate+
-                                " " +
-                                "|| "+" Clock In Time: "+clockInTime+" || Clock Out Time: "+clockOutTime+ " || Hours:" +
-                                " "+ hours  );
+                String formattedText = String.format("Employee Id: %s | Employee Name: %s | Date: %s | Clock In Time: %s | Clock Out Time: %s | Hours: %.2f",
+                        empId, employeeName, new SimpleDateFormat("yyyy-MM-dd").format(workDate), clockInTime, clockOutTime, hours);
+
+                // Create the Text node with formatted text
+                Text txtInfo = new Text(formattedText);
+
                 LoginSignUp.empInfoContainer.getChildren().add(txtInfo);
             }
         }
         catch(SQLException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void removeEmpMethod(Stage stage, String empIdToRemove){
+        try{
+            Connection connection = DriverManager.getConnection(jdbcUrl,username,password);
+            String query = "select * from employee where employeeId = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1,empIdToRemove);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()){
+                String deleteQuery = "delete from employee where employeeId = ?";
+                PreparedStatement deletePrep = connection.prepareStatement(deleteQuery);
+                deletePrep.setString(1,empIdToRemove);
+                int rowsUpdated = deletePrep.executeUpdate();
+                if (rowsUpdated > 0){
+                    System.out.println("Removed employee");
+                }
+                else{
+                    System.out.println("Cannot remove employee!");
+                }
+            }
+            else{
+                System.out.println("No such employee found!");
+            }
+
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
